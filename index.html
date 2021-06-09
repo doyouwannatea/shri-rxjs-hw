@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://unpkg.com/rxjs@7.1.0/dist/bundles/rxjs.umd.min.js"></script>
+    <style>
+        html,
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        html {
+            font-family: 'Roboto', sans-serif;
+            font-weight: normal;
+            letter-spacing: 0.2px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background: #f1f2f5;
+        }
+
+        #app {
+            padding-top: 100px;
+            text-align: center;
+        }
+
+        #input {
+            margin: 20px auto;
+            border-radius: 4px;
+            height: 25px;
+            width: 200px;
+            padding: 5px;
+            border: 1px solid black;
+            font-size: 24px;
+        }
+
+        #response-container,
+        #cancel-prev-request-container {
+            margin: 10px;
+            font-size: 16px;
+
+        }
+
+        #button {
+            position: relative;
+            background-color: #4CAF50;
+            border: none;
+            font-size: 12px;
+            color: #FFFFFF;
+            padding: 10px;
+            width: 100px;
+            text-align: center;
+            -webkit-transition-duration: 0.4s;
+            transition-duration: 0.4s;
+            text-decoration: none;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        #button:hover,
+        #button:after {
+            background-color: #167e19;
+        }
+
+        #button:after {
+            content: "";
+            background: #f1f1f1;
+            display: block;
+            position: absolute;
+            padding-top: 300%;
+            padding-left: 350%;
+            margin-left: -20px !important;
+            margin-top: -120%;
+            opacity: 0;
+            transition: all 0.8s
+        }
+
+        #button:active:after {
+            padding: 0;
+            margin: 0;
+            opacity: 1;
+            transition: 0s
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <input id="input">
+        <div id="response-container">response-container</div>
+        <div id="cancel-prev-request-container">cancel-prev-request-container</div>
+        <button type="button" id="button">Очистить</button>
+    </div>
+    <script>
+        const { fromEvent } = rxjs
+        const { switchMap, mergeMap, scan } = rxjs.operators
+        
+        // ------------------------------------------------------------
+        // Переменные
+        // ------------------------------------------------------------
+        const inputEl = document.getElementById('input')
+        const responseContainerEl = document.getElementById('response-container')
+        const cancelPrevRequestContainerEl = document.getElementById('cancel-prev-request-container')
+        const buttonEl = document.getElementById('button')
+        
+        // ------------------------------------------------------------
+        // Функции
+        // ------------------------------------------------------------
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const getApiResponse = (searchString) => new Promise(resolve =>
+            setTimeout(() => resolve(searchString), getRandomInt(1, 10) * 500)
+        );
+
+        // ------------------------------------------------------------
+        // Задание 1
+        // ------------------------------------------------------------
+        const buttonClicks$ = fromEvent(buttonEl, 'click')
+
+        buttonClicks$.subscribe(() => {
+            inputEl.value = ''
+            responseContainerEl.textContent = ''
+            cancelPrevRequestContainerEl.textContent = ''
+        })
+        
+        // ------------------------------------------------------------
+        // Задание 2
+        // ------------------------------------------------------------
+        const inputChange$ = fromEvent(inputEl, 'input')
+
+        const setApiValue = () => {
+            const searchValue = input.value
+            return getApiResponse(searchValue)
+        }
+        
+        const resolveCancelRequest = () => {
+            return inputChange$.pipe(switchMap(setApiValue)).subscribe(result => {
+                cancelPrevRequestContainerEl.textContent = result
+            })
+        }
+        
+        let resolveCancelRequest$ = resolveCancelRequest()
+        buttonClicks$.subscribe(() => {
+            resolveCancelRequest$.unsubscribe()
+            resolveCancelRequest$ = resolveCancelRequest()
+        })
+        
+        // ------------------------------------------------------------
+        // Задание 3
+        // ------------------------------------------------------------
+        const resolveRaceCondition = () => {
+            return inputChange$.pipe(
+                mergeMap(setApiValue), 
+                scan((acc, curr) => curr.trim().length > acc.trim().length ? acc + ' ' + curr : acc, '')
+            ).subscribe(result => {
+                responseContainerEl.textContent = result
+            })
+        }
+
+        let resolveRaceCondition$ = resolveRaceCondition()
+        buttonClicks$.subscribe(() => {
+            resolveRaceCondition$.unsubscribe()
+            resolveRaceCondition$ = resolveRaceCondition()
+        })
+        
+    </script>
+</body>
+
+</html>
