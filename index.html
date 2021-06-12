@@ -95,9 +95,16 @@
         <button type="button" id="button">Очистить</button>
     </div>
     <script>
-        const { fromEvent } = rxjs
-        const { switchMap, mergeMap, scan } = rxjs.operators
-        
+        const {
+            fromEvent
+        } = rxjs
+
+        const {
+            switchMap,
+            mergeMap,
+            scan
+        } = rxjs.operators
+
         // ------------------------------------------------------------
         // Переменные
         // ------------------------------------------------------------
@@ -105,7 +112,7 @@
         const responseContainerEl = document.getElementById('response-container')
         const cancelPrevRequestContainerEl = document.getElementById('cancel-prev-request-container')
         const buttonEl = document.getElementById('button')
-        
+
         // ------------------------------------------------------------
         // Функции
         // ------------------------------------------------------------
@@ -125,36 +132,38 @@
             responseContainerEl.textContent = ''
             cancelPrevRequestContainerEl.textContent = ''
         })
-        
+
         // ------------------------------------------------------------
         // Задание 2
         // ------------------------------------------------------------
         const inputChange$ = fromEvent(inputEl, 'input')
 
-        const setApiValue = () => {
+        const getApiValue = () => {
             const searchValue = input.value
             return getApiResponse(searchValue)
         }
-        
+
         const resolveCancelRequest = () => {
-            return inputChange$.pipe(switchMap(setApiValue)).subscribe(result => {
+            return inputChange$.pipe(
+                switchMap(getApiValue)
+            ).subscribe(result => {
                 cancelPrevRequestContainerEl.textContent = result
             })
         }
-        
+
         let resolveCancelRequest$ = resolveCancelRequest()
         buttonClicks$.subscribe(() => {
             resolveCancelRequest$.unsubscribe()
             resolveCancelRequest$ = resolveCancelRequest()
         })
-        
+
         // ------------------------------------------------------------
         // Задание 3
         // ------------------------------------------------------------
         const resolveRaceCondition = () => {
             return inputChange$.pipe(
-                mergeMap(setApiValue), 
-                scan((acc, curr) => curr.trim().length > acc.trim().length ? acc + ' ' + curr : acc, '')
+                mergeMap(getApiValue),
+                scan((acc, curr) => curr.trim().length > acc.trim().length ? acc + curr : acc, '')
             ).subscribe(result => {
                 responseContainerEl.textContent = result
             })
@@ -165,7 +174,6 @@
             resolveRaceCondition$.unsubscribe()
             resolveRaceCondition$ = resolveRaceCondition()
         })
-        
     </script>
 </body>
 
